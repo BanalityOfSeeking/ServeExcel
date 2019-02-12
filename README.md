@@ -47,13 +47,13 @@ http://127.0.0.1:8183/?reports
 
 Next steps
 
-1. Decentralize the REPORTS dataset so that multi reports in 1 excel file can be achieved.(started)
+    1. Decentralize the REPORTS dataset so that multi reports in 1 excel file can be achieved.(started)
 
-2 serialize to memory instead of files for templates.(unstarted)
+    2 serialize to memory instead of files for templates.(unstarted)
 
-3. excel data generator in done by data type formet with constrictions on  content of data generated.(unstarted)
+    3. excel data generator in done by data type formet with constrictions on  content of data generated.(unstarted)
 
-4. Convert completely to .net core or a .net standard libary.(unstarted)
+    4. Convert completely to .net core or a .net standard libary.(unstarted)
 
 Pull requests are welcome. :)
 
