@@ -55,5 +55,5 @@ Next steps
 
 4. Convert completely to .net core or a .net standard libary.(unstarted)
 
-Pull requests  welcome. :)
+Pull requests are welcome. :)
 
