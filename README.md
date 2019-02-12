@@ -51,7 +51,7 @@ Next steps
 
     2 serialize to memory instead of files for templates.(unstarted)
 
-    3. excel data generator in done by data type formet with constrictions on  content of data generated.(unstarted)
+    3. excel data generator by data type formet with constrictions for data generated.(unstarted)
 
     4. Convert completely to .net core or a .net standard libary.(unstarted)
 
