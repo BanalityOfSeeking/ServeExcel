@@ -7,7 +7,9 @@ namespace ServeReports
         [MTAThread]
         private static void Main()
         {
-            CreateServer("http://127.0.0.1");
+            ConsoleLogger logger = new ConsoleLogger();
+            Server server = new Server("http://127.0.0.1", logger);
+
         }
     }
 }
