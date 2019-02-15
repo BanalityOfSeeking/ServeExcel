@@ -49,13 +49,15 @@ example
 
 Next steps
 
-    1. Decentralize the REPORTS dataset so that multi reports in 1 excel file can be achieved.(started)
+    1. Decentralize the REPORTS dataset so that multi reports in 1 excel file can be achieved.(done)
 
-    2 serialize to memory instead of files for templates.(unstarted)
+    2 Serialize to memory instead of files for templates.(done)
 
-    3. excel data generator by data type formet with constrictions for data generated.(unstarted)
+    3. Add ability to add excel formulas to excelTemplates and flow through into excel files.(unstarted)
 
     4. Convert completely to .net core or a .net standard libary.(unstarted)
+    
+    5. Excel Datatype layout manager.(unstarted)
 
 Pull requests are welcome. :)
 
