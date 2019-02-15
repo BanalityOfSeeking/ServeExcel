@@ -7,7 +7,6 @@ using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Runtime.Serialization.Formatters.Binary;
 
 namespace ServeReports
@@ -368,26 +367,6 @@ namespace ServeReports
             }
             return memoryStream;
 
-        }
-        public bool DeliverFile(HttpListenerContext client, string reportName, MemoryStream memoryStream, string mimeHeader = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        {
-            using (HttpListenerResponse response = client.Response)
-            {
-                response.StatusCode = 200;
-                response.StatusDescription = "OK";
-                response.ContentType = mimeHeader;
-                response.ContentLength64 = memoryStream.Length;
-                response.AddHeader("Content-disposition", "attachment; filename=" + reportName);
-                response.SendChunked = false;
-                using (BinaryWriter bw = new BinaryWriter(response.OutputStream))
-                {
-                    byte[] bContent = memoryStream.ToArray();
-                    bw.Write(bContent, 0, bContent.Length);
-                    bw.Flush();
-                    bw.Close();
-                    return true;
-                }
-            }
         }
     }
 }

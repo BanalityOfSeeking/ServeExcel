@@ -59,7 +59,7 @@ namespace ServeReports
                 int index = WaitHandle.WaitAny(waitHandles);
 
 
-                ListenerContext = sock;
+                
 
                 ThreadParams context = new ThreadParams()
                 {
@@ -93,6 +93,7 @@ namespace ServeReports
 
         private void DoWork(HttpListenerContext client, byte[] data)
         {
+            HttpContextResponder responder = new HttpContextResponder(client);
             try
             {
                 byte[] amp = Encoding.UTF8.GetBytes("&");
@@ -125,7 +126,7 @@ namespace ServeReports
 
                                     bool screate = sdata.Slice(sdata.LastIndexOf(amp) + 11).SequenceEqual(Encoding.UTF8.GetBytes("true")) ? true : false;
 
-                                    WriteResponse(Temphandler.TemplateValidateInit(Encoding.UTF8.GetString(name.ToArray()), Encoding.UTF8.GetString(sheetName.ToArray()), Encoding.UTF8.GetString(header.ToArray()).Split(','), screate));
+                                    responder.WriteResponse(Temphandler.TemplateValidateInit(Encoding.UTF8.GetString(name.ToArray()), Encoding.UTF8.GetString(sheetName.ToArray()), Encoding.UTF8.GetString(header.ToArray()).Split(','), screate));
                                     
                                 }
                             }
@@ -141,8 +142,14 @@ namespace ServeReports
 
                                 ReadOnlySpan<byte> content = sdata.Slice(13 + name.Length + 11 + sheetName.Length + 9);
 
-                                WriteResponse(Temphandler.TemplateValidateFill(Encoding.UTF8.GetString(name.ToArray()), Encoding.UTF8.GetString(sheetName.ToArray()), Encoding.UTF8.GetString(content.ToArray()).Split(',')));
-                                Temphandler.AddSheet(Encoding.UTF8.GetString(name.ToArray()), Encoding.UTF8.GetString(sheetName.ToArray()));
+                                responder.WriteResponse(
+                                    Temphandler.TemplateValidateFill(
+                                        Encoding.UTF8.GetString(name.ToArray()),
+                                        Encoding.UTF8.GetString(sheetName.ToArray()),
+                                        Encoding.UTF8.GetString(content.ToArray()).Split(',')));
+
+                                Temphandler.AddSheet(Encoding.UTF8.GetString(name.ToArray()),
+                                    Encoding.UTF8.GetString(sheetName.ToArray()));
                             }
                         }
                         break;
@@ -152,7 +159,10 @@ namespace ServeReports
                             ReadOnlySpan<byte> name = sdata.Slice(12);
                             MemoryStream ms = Temphandler.ToExcel(Encoding.UTF8.GetString(name.ToArray()));
                             long len = ms.Length;
-                            WriteResponse(Temphandler.DeliverFile(client, Encoding.UTF8.GetString(name.ToArray()) + ".xlsx", ms) ? "Successful Delivery" : "File Create Failed");
+                            responder.WriteResponse(
+                                responder.DeliverFile(
+                                    Encoding.UTF8.GetString(name.ToArray()) + ".xlsx", ms) 
+                                    ? "Successful Delivery" : "File Creation Failed");
                         }
                         break;
                     case "/?report":
@@ -165,7 +175,7 @@ namespace ServeReports
                                 sbdata += "<tr><td>" + report + "</td></tr>";
                             }
                             sbdata += "</table></center>";
-                            WriteResponse(sbdata);
+                            responder.WriteResponse(sbdata);
                         }
                         break;
 
@@ -184,19 +194,6 @@ namespace ServeReports
                 _logger.LogError(ex, ex.Message);
             }
 
-        }
-
-        public bool ContextPresent()
-        {
-            return ListenerContext != null;
-        }
-        
-        public void WriteResponse(string Message)
-        {
-            if(ContextPresent())
-            {
-                ListenerContext.Response.OutputStream.Write(Encoding.UTF8.GetBytes(Message), 0, Encoding.UTF8.GetBytes(Message).Length);
-            }
         }
     }
 }
