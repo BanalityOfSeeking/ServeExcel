@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -8,15 +9,14 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 
 namespace ServeReports
 {
 
-    public class Temphandler
+    public class TemplateHandler : ITemplateHandler
     {
-        private readonly SocketLogger _logger;
-        public Temphandler(SocketLogger logger)
+        private readonly ILogger _logger;
+        public TemplateHandler(ILogger logger)
         {
             _logger = logger;
         }
@@ -24,120 +24,177 @@ namespace ServeReports
 
         internal Dictionary<(string, string), DataTable> sheetTables = new Dictionary<(string, string), DataTable>();
 
-        public bool TemplateInit(string reportName, string SheetName, string[] header, bool createNew, HttpListenerContext socket)
+        public string TemplateValidateInit(string reportName, string SheetName, string[] header, bool createNew)
         {
-            if (string.IsNullOrEmpty(reportName) | string.IsNullOrEmpty(SheetName))
+            if (string.IsNullOrEmpty(reportName))
             {
-                _logger.ClientLog(socket, "Failed report name or sheet name cannot be null");
-                return false;
+                _logger.Log("Failed report name cannot be null");
+                return ("Failed report name cannot be null");
             }
-
-            if (header.Count() == 0 & header != null)
+            if (string.IsNullOrEmpty(SheetName))
             {
-                _logger.ClientLog(socket,"Failed headers cannot be null");
-                return false;
+                _logger.Log("Failed SheetName cannot be null");
+                return ("Failed SheetName cannot be null");
             }
-
-            if (TemplateInit(reportName, SheetName, header, createNew))
+            if (header.Length == 0 | header == null)
             {
-                _logger.ClientLog(socket,"Successfully Initialized " + reportName + " with Sheet " + SheetName);
-                return true;
+                _logger.Log("Initialization Failed, headers cannot be null");
+                return ("Initialization Failed, headers cannot be null");
             }
-            return false;
+            try
+            {
+                if (TemplateCreateOrUpdate(reportName, SheetName, header, createNew))
+                {                    
+                    _logger.Log("Successfully Initialized " + reportName + " with Sheet " + SheetName);
+                    return ("Successfully Initialized " + reportName + " with Sheet " + SheetName);
+                }
+               
+                _logger.Log("Failed Initializing Template " + reportName + " with Sheet " + SheetName);
+                return ("Failed Initializing Template " + reportName + " with Sheet " + SheetName);
+                
+            }
+            catch(Exception ex)
+            {
+                
+                _logger.LogError(ex, "Failed Initializing Template " + reportName + " with Sheet " + SheetName);
+                return ("Failed Initializing Template " + reportName + " with Sheet " + SheetName);
 
-
+            }
         }
-        private bool TemplateInit(string reportName, string SheetName, string[] header, bool createNew)
+        internal bool TemplateUpdate(string reportName, string SheetName, string[] header)
         {
             BinaryFormatter binFormatter = new BinaryFormatter();
-
-            byte[] MemoryBuffer = new byte[10 * 1024];
-
-            MemoryStream ms = new MemoryStream(MemoryBuffer, true);
-
-            if (header.Length != 0)
+            if (InMemContainers.ContainsKey((reportName, SheetName)))
             {
 
-                if (createNew)
+                using (MemoryStream ms = new MemoryStream(InMemContainers[(reportName, SheetName)]))
                 {
 
-                    var Template = new TemplateContainer();
+                    TemplateContainer Template = binFormatter.Deserialize(ms) as TemplateContainer;
 
-                    TemplateObject tempObj = new TemplateObject
+                    TemplateObject TempObj = Template.TObject.Find(x => x.SheetName == SheetName);
+
+                    TempObj.Format = new string[header.Length];
+
+                    header.CopyTo(TempObj.Format, 0);
+
+                    if (Template.ContentLength > 0 && Template.ContentLength % Template.FormatLength == 0)
                     {
-                        NameOfReport = reportName,
-
-                        SheetName = SheetName
-                    };
-
-                    Template.TObject.Add(tempObj);
-
-                    Template.FormatLength = header.Count();
-
-                    tempObj.Format = new string[Template.FormatLength];
-
-                    header.CopyTo(tempObj.Format, 0);
-
-                    binFormatter.Serialize(ms, Template);
-
-                    InMemContainers.Add((reportName, SheetName), ms.ToArray());
-
-                    return true;
-                }
-            }
-            else
-            {
-                if (InMemContainers.ContainsKey((reportName, SheetName)))
-                {
-
-                    using (ms = new MemoryStream(InMemContainers[(reportName, SheetName)]))
-                    {
-
-                        TemplateContainer Template = binFormatter.Deserialize(ms) as TemplateContainer;
-
-                        TemplateObject TempObj = Template.TObject.Find(x => x.SheetName == SheetName);
-
-                        TempObj.Format = new string[header.Length];
-
-                        header.CopyTo(TempObj.Format, 0);
-
-                        if (Template.ContentLength > 0 && Template.ContentLength % Template.FormatLength == 0)
+                        if (TemplateFill(reportName, SheetName, Template.ContentArray))
                         {
-                            if (TemplateFill(reportName, SheetName, Template.ContentArray))
-                            {
-                                ms.Seek(0, SeekOrigin.Begin);
 
-                                binFormatter.Serialize(ms, Template);
+                            binFormatter.Serialize(ms, Template);
 
-                                return true;
+                            return true;
 
-                            }
                         }
-
                     }
                 }
             }
             return false;
         }
-
-
-        public bool TemplateFill(string reportName, string SheetName, string[] content, HttpListenerContext socket)
+        internal bool TemplateCreate(string reportName, string SheetName, string[] header)
         {
-            if (string.IsNullOrEmpty(reportName) | string.IsNullOrEmpty(SheetName))
+            int cc = InMemContainers.Count();
+            if (InMemContainers.ContainsKey((reportName, SheetName)))
             {
+                if (TemplateUpdate(reportName, SheetName, header))
+                {
+                    return true;
+                }
                 return false;
             }
-            if (content.Count() == 0 & content != null)
+
+            BinaryFormatter binFormatter = new BinaryFormatter();
+
+            var Template = new TemplateContainer();
+
+            TemplateObject tempObj = new TemplateObject
             {
+                NameOfReport = reportName,
+
+                SheetName = SheetName
+            };
+
+            byte[] MemoryBuffer = new byte[100 * 1024];
+
+            using (MemoryStream ms = new MemoryStream(MemoryBuffer, true))
+            {
+
+                tempObj.Format = new string[Template.FormatLength];
+
+                header.CopyTo(tempObj.Format, 0);
+
+                Template.TObject.Add(tempObj);
+
+                Template.FormatLength = header.Count();
+
+                binFormatter.Serialize(ms, Template);
+
+                InMemContainers.Add((reportName, SheetName), ms.ToArray());
+                if (InMemContainers.Count() > cc)
+                {
+                    return true;
+                }
+                return false;
+
+            }
+
+        }
+        private bool TemplateCreateOrUpdate(string reportName, string SheetName, string[] header, bool createNew)
+        {
+            if (createNew)
+            {
+                if (TemplateCreate(reportName, SheetName, header))
+                {
+                    return true;
+                }
                 return false;
             }
-            if (TemplateFill(reportName, SheetName, content))
+            else
             {
-                socket.Response.OutputStream.Write(Encoding.UTF8.GetBytes(reportName + " successfully filled"), 0, (reportName + " successfully filled").Length);
-                return true;
+                if (TemplateUpdate(reportName, SheetName, header))
+                {
+                    return true;
+                }
+                return false;
             }
-            socket.Response.OutputStream.Write(Encoding.UTF8.GetBytes(reportName + " fill failed"), 0, (reportName + " fill failed").Length);
-            return false;
+        }
+
+        public string TemplateValidateFill(string reportName, string SheetName, string[] content)
+        {
+            
+            if (string.IsNullOrEmpty(reportName))
+            {
+                _logger.Log("Failed report name cannot be null");
+                return ("Failed report name cannot be null");
+            }
+            if (string.IsNullOrEmpty(SheetName))
+            {
+                _logger.Log("Failed SheetName cannot be null");
+                return ("Failed SheetName cannot be null");
+            }
+            if (content.Length == 0 | content == null)
+            {
+                _logger.Log("content parameter cannot be blank");
+                return ("content parameter cannot be blank or null");
+            }
+            try
+            {
+                if (TemplateFill(reportName, SheetName, content))
+                {
+                    _logger.Log(reportName + " " + SheetName + " successfully filled");
+                    return (reportName + " " + SheetName + " successfully filled");
+                }
+                _logger.Log(reportName + " " + SheetName + " fill failed");
+                return (reportName + " " + SheetName + " fill failed");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, reportName + " fill failed");
+                return (reportName + " fill failed");
+            }
+        
         }
 
         private bool TemplateFill(string reportName, string SheetName, string[] content)
@@ -301,7 +358,7 @@ namespace ServeReports
                             Cell cell = new Cell
                             {
                                 DataType = CellValues.String,
-                                CellValue = new CellValue(dsrow[col].ToString())    //
+                                CellValue = new CellValue(dsrow[col].ToString())
                             };
                             newRow.AppendChild(cell);
                         }
@@ -324,7 +381,6 @@ namespace ServeReports
                 response.SendChunked = false;
                 using (BinaryWriter bw = new BinaryWriter(response.OutputStream))
                 {
-
                     byte[] bContent = memoryStream.ToArray();
                     bw.Write(bContent, 0, bContent.Length);
                     bw.Flush();
