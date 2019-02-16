@@ -13,12 +13,13 @@ namespace ServeReports
     {
         private readonly ILogger _logger;
 
-        private readonly TemplateHandler Temphandler;
-
+        private readonly TemplateInputHandler InputHandler;
+        private readonly TemplateObjectHandler ObjectHandler;
         public Server(string IP, ILogger logger)
         {
             _logger = logger;
-            Temphandler = new TemplateHandler(logger);
+            ObjectHandler = new TemplateObjectHandler(new TemplateContainer(), logger);
+            InputHandler = new TemplateInputHandler(ObjectHandler, logger);
             CreateServer(IP);
         }
         private const int PORT = 8183;
@@ -126,7 +127,7 @@ namespace ServeReports
 
                                     bool screate = sdata.Slice(sdata.LastIndexOf(amp) + 11).SequenceEqual(Encoding.UTF8.GetBytes("true")) ? true : false;
 
-                                    responder.WriteResponse(Temphandler.TemplateValidateInit(Encoding.UTF8.GetString(name.ToArray()), Encoding.UTF8.GetString(sheetName.ToArray()), Encoding.UTF8.GetString(header.ToArray()).Split(','), screate));
+                                    responder.WriteResponse(InputHandler.TemplateValidateInit(Encoding.UTF8.GetString(name.ToArray()), Encoding.UTF8.GetString(sheetName.ToArray()), Encoding.UTF8.GetString(header.ToArray()).Split(','), screate));
                                     
                                 }
                             }
@@ -143,12 +144,12 @@ namespace ServeReports
                                 ReadOnlySpan<byte> content = sdata.Slice(13 + name.Length + 11 + sheetName.Length + 9);
 
                                 responder.WriteResponse(
-                                    Temphandler.TemplateValidateFill(
+                                    InputHandler.TemplateValidateFill(
                                         Encoding.UTF8.GetString(name.ToArray()),
                                         Encoding.UTF8.GetString(sheetName.ToArray()),
                                         Encoding.UTF8.GetString(content.ToArray()).Split(',')));
 
-                                Temphandler.AddSheet(Encoding.UTF8.GetString(name.ToArray()),
+                                    ObjectHandler.TemplateObjectToDataTable(Encoding.UTF8.GetString(name.ToArray()),
                                     Encoding.UTF8.GetString(sheetName.ToArray()));
                             }
                         }
@@ -157,7 +158,7 @@ namespace ServeReports
                     case "/?getreport=":
                         {
                             ReadOnlySpan<byte> name = sdata.Slice(12);
-                            MemoryStream ms = Temphandler.ToExcel(Encoding.UTF8.GetString(name.ToArray()));
+                            MemoryStream ms = ObjectHandler.ToExcel(Encoding.UTF8.GetString(name.ToArray()));
                             long len = ms.Length;
                             responder.WriteResponse(
                                 responder.DeliverFile(
@@ -168,8 +169,8 @@ namespace ServeReports
                     case "/?report":
                         {
                             string sbdata = "<center><p>Available Reports</p><table>";
-                            foreach(var report in (from reportKeys in Temphandler.InMemContainers
-                             select reportKeys.Key.Item1).Distinct())
+                            foreach(var report in (from reportKeys in ObjectHandler.Container.GetTObject()
+                             select reportKeys.NameOfReport).Distinct())
 
                             {
                                 sbdata += "<tr><td>" + report + "</td></tr>";

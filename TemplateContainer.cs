@@ -1,24 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace ServeReports
 {
-    [Serializable]
-    struct TemplateObject
+    public class TemplateContainer : ITemplateContainer
     {
-        public string NameOfReport { get; set; }
-        public string SheetName { get; set; }
-        public string[] Format { get; set; }
-        public string[,] Content { get; set; }
-    }
+        public TemplateContainer()
+        {
+        }
+        private List<TemplateObject> _TObject = new List<TemplateObject>();
+        public List<TemplateObject> GetTObject() => _TObject;
+        public void AddTObject(TemplateObject templateObject) => _TObject.Add(templateObject);
 
-    [Serializable]
-    class TemplateContainer
-    {
-        public List<TemplateObject> TObject = new List<TemplateObject>();
-        public string[] ContentArray { get; set; }
-        public int FormatLength { get; set; }
-        public int ContentLength { get; set; }
     }
 }
 
