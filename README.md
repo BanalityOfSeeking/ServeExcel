@@ -36,7 +36,7 @@ API GET resulting report by name
 
 example
 
-    http://127.0.0.1:8183/?getreport=DynamicReeport
+    http://127.0.0.1:8183/?getreport=DynamicReport
 
 API Query available reports
 
