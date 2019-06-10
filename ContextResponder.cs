@@ -1,31 +1,48 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using Template.Interfaces;
+using TemplateToExcelServer.ContextResponder;
 
-namespace Template.ContextResponder
+namespace TemplateToExcelServer.ContextResponder
 {
-    public abstract class ContextResponder<T> : IContextResponder
+    public class ContextResponder : AbstractContextResponder
     {
-        public ContextResponder(T output)
+        public ContextResponder()
         {
-            OutputContext = output;
         }
 
-        public abstract T OutputContext { get; set; }
-
-        public virtual bool ContextPresent()
+        public override void AbortResponse()
         {
-            return OutputContext != null;
+            Console.Beep();
         }
 
-        public virtual bool DeliverFile(ReadOnlySpan<byte> reportName, Stream Stream)
+        public override void CloseResponse(string Message)
         {
-            using (FileStream bw = File.Create(Path.Combine("..\\Files", Encoding.UTF8.GetString(reportName))))
+            Console.WriteLine(Message);
+        }
+
+        public override void CloseResponse(ReadOnlyMemory<byte> Message)
+        {
+            Console.WriteLine(Encoding.UTF8.GetString(Message.ToArray()));
+        }
+
+        public override void CloseResponse(byte[] Message)
+        {
+            Console.WriteLine(Encoding.UTF8.GetString(Message));
+        }
+
+        public override bool ContextPresent()
+        {
+            return true;
+        }
+
+        public override bool DeliverFile(ReadOnlyMemory<byte> reportName, Stream Stream)
+        {
+            using (FileStream bw = File.Create(Path.Combine("..\\Files", Encoding.UTF8.GetString(reportName.ToArray()))))
             {
                 using (StreamReader sr = new StreamReader(Stream))
                 {
-                    byte[] bContent = Encoding.UTF8.GetBytes(sr.ReadToEnd());
+                    var bContent = Encoding.UTF8.GetBytes(sr.ReadToEnd());
                     bw.Write(bContent, 0, bContent.Length);
                     bw.Flush();
                 }
@@ -33,39 +50,19 @@ namespace Template.ContextResponder
             return true;
         }
 
-        public virtual void WriteResponse(string Message)
+        public override void WriteResponse(string Message)
         {
             Console.WriteLine(Message);
         }
 
-        public virtual void WriteResponse(ReadOnlySpan<byte> Message)
+        public override void WriteResponse(ReadOnlyMemory<byte> Message)
+        {
+            Console.WriteLine(Encoding.UTF8.GetString(Message.ToArray()));
+        }
+
+        public override void WriteResponse(byte[] Message)
         {
             Console.WriteLine(Encoding.UTF8.GetString(Message));
-        }
-
-        public virtual void WriteResponse(byte[] Message)
-        {
-            Console.WriteLine(Encoding.UTF8.GetString(Message));
-        }
-
-        public virtual void CloseResponse(string Message)
-        {
-            Console.WriteLine(Message);
-        }
-
-        public virtual void CloseResponse(ReadOnlySpan<byte> Message)
-        {
-            Console.WriteLine(Encoding.UTF8.GetString(Message));
-        }
-
-        public virtual void CloseResponse(byte[] Message)
-        {
-            Console.WriteLine(Encoding.UTF8.GetString(Message));
-        }
-
-        public virtual void AbortResponse()
-        {
-            Console.Beep();
         }
     }
 }

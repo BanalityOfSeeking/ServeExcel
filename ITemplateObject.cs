@@ -2,36 +2,29 @@
 using System.Collections.Generic;
 using System.Data;
 
-namespace Template.Interfaces
+namespace TemplateToExcelServer.Template
 {
-    public interface IContent
+    public interface ITemplateObject
     {
-        string[,] GetContent();
-
-        string[] GetContentArray();
-
         bool ContentArrayAdded { get; }
         int? ContentArrayLength { get; }
-        int? NumberOfRowsToAdd { get; }
-    }
-
-    public interface ILayout
-    {
-        string[] GetFormat();
-
-        int? GetFormatLength();
-
-        string[] Format { get; set; }
-        List<string> FormatList { get; set; }
-    }
-
-    public interface ITemplateObject : ILayout, IContent
-    {
-        ReadOnlyMemory<byte> NameOfReport { get; }
-        ReadOnlyMemory<byte> SheetName { get; }
+        bool ContentValidForLoad { get; }
         DataTable DataTable { get; }
-
+        string[] Format { get; }
+        List<string> FormatList { get; }
+        ReadOnlyMemory<byte> NameOfReport { get; }
+        int? NumberOfRowsToAdd { get; }
         bool ProcessTemplate { get; }
-       
+        ReadOnlyMemory<byte> SheetName { get; }
+
+        string[,] GetContent();
+        string[] GetContentArray();
+        string[] GetFormat();
+        int? GetFormatLength();
+        TemplateObject SetContent(string[,] Content);
+        TemplateObject SetContentArray(string[] value);
+        TemplateObject SetFormat(string[] Header);
+        TemplateObject SetNameOfReport(ReadOnlyMemory<byte> ReportName);
+        TemplateObject SetSheetName(ReadOnlyMemory<byte> SheetName);
     }
 }

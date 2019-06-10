@@ -1,20 +1,18 @@
 ﻿using System;
 using System.IO;
 
-namespace Template.Interfaces
+namespace TemplateToExcelServer.ContextResponder
 {
     public interface IContextResponder
     {
-        bool ContextPresent();
-
-        bool DeliverFile(ReadOnlySpan<byte> reportName, Stream Stream);
-
-        void CloseResponse(string Message);
-
-        void CloseResponse(ReadOnlySpan<byte> Message);
-
-        void CloseResponse(byte[] Message);
-
         void AbortResponse();
+        void CloseResponse(byte[] Message);
+        void CloseResponse(ReadOnlyMemory<byte> Message);
+        void CloseResponse(string Message);
+        bool ContextPresent();
+        bool DeliverFile(ReadOnlyMemory<byte> reportName, Stream Stream);
+        void WriteResponse(byte[] Message);
+        void WriteResponse(ReadOnlyMemory<byte> Message);
+        void WriteResponse(string Message);
     }
 }

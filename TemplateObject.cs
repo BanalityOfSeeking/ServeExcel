@@ -4,159 +4,61 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using Template.Interfaces;
 
-namespace Template.Template
+
+namespace TemplateToExcelServer.Template
 {
-    
     public class TemplateObject : ITemplateObject
     {
+
+        private string[] ContentArray;
 
         public TemplateObject()
         {
         }
 
-        public DataTable DataTable { get; private set; }
-
-
-        private ReadOnlyMemory<byte> _NameOfReport;
-        public ReadOnlyMemory<byte> NameOfReport { get => _NameOfReport; }
-
-        public TemplateObject SetNameOfReport(ReadOnlyMemory<byte> value)
-        {
-            if (!value.IsEmpty)
-            {
-                if (value.Length < 4)
-                {
-                    throw new ArgumentException("Value is not required length", "reportname");
-                }
-                else
-                {
-                    _NameOfReport = value;
-                    return this;
-                }
-            }
-            throw new ArgumentException("Value is not required length", "reportname");
-        }
-
-        private ReadOnlyMemory<byte> _SheetName;
-        public ReadOnlyMemory<byte> SheetName { get => _SheetName; }
-
-        public TemplateObject SetSheetName(ReadOnlyMemory<byte> value)
-        {
-            if (!value.IsEmpty)
-            {
-                if (value.Length < 5)
-                {
-                    throw new ArgumentException("Value is not required length of 5 characters", "sheetname");
-                }
-                else
-                {
-                    _SheetName = value;
-                    return this;
-                }
-            }
-            throw new ArgumentException("Value is not required length of 5 characters", "sheetname");
-        }
-
-        private string[] _Format;
-
-        public string[] Format { get => _Format; set => SetFormat(value); }
-        public List<string> FormatList { get; set; }
-
-        public int? GetFormatLength()
-        {
-            return _Format != null ? _Format?.Length : null;
-        }
-
-        public string[] GetFormat()
-        {
-            return _Format != null ? _Format : null;
-        }
-
-        public TemplateObject SetFormat(string[] value)
-        {
-            if (value.Count() > 2)
-            {
-                _Format = value;
-                FormatList = _Format.ToList();                
-            }
-            else
-            {
-                throw new ArgumentException("Format has to be greater then 2 elements", "header");
-            }
-            return this;
-        }
-
-        private string[,] _Content { get; set; } = null;
-
-        public string[,] GetContent()
-        {
-            return _Content;
-        }
-
-        public TemplateObject SetContent(string[,] value)
-        {
-            if (value.GetLength(0) == Format.Length)
-            {
-                _Content = value;
-            }
-            else
-            {
-                throw new ArgumentException("Format must match length of report", "content");
-            }
-            return this;
-        }
-
-        private string[] _ContentArray;
-
-        public string[] GetContentArray()
-        {
-            return _ContentArray;
-        }
-
-        public TemplateObject SetContentArray(string[] value)
-        {
-            if (value.Length % Format.Length == 0)
-            {
-                _ContentArray = value;
-            }
-            else
-            {
-                throw new ArgumentException("Content array must be multiple of " + Format.Length + ".", nameof(_ContentArray));
-            }
-            return this;
-        }
+        public bool ContentArrayAdded => GetContentArray().Length > 0;
 
         public int? ContentArrayLength => ContentArrayAdded ? GetContentArray()?.Length ?? null : null;
 
-        public bool ContentArrayAdded => GetContentArray().Length > 0;
+        public bool ContentValidForLoad
+        {
+            get
+            {
+                if (ContentArrayLength.HasValue && NumberOfRowsToAdd.HasValue)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        public DataTable DataTable { get; private set; }
+
+        public string[] Format { get; private set; }
+        public List<string> FormatList { get; private set; }
+        public bool IsCompleted { get; private set; }
+        public ReadOnlyMemory<byte> NameOfReport { get; private set; }
 
         public int? NumberOfRowsToAdd => ContentArrayAdded ? GetFormatLength().HasValue ? ContentArrayLength / GetFormatLength().Value : null : null;
-
-        public bool ContentValidForLoad => ContentArrayAdded ? GetContentArray().Length != 0 ? GetFormat().Length != 0 ? GetContentArray().Length % GetFormat().Length == 0 ? true : false : false : false : false;
-
         public bool ProcessTemplate
         {
             get
             {
-                if (ContentValidForLoad)
+                if (IsCompleted && ContentValidForLoad)
                 {
                     DataTable = new DataTable(Encoding.UTF8.GetString(SheetName.Span))
                     {
-                        CaseSensitive = false,
                         Locale = CultureInfo.CurrentCulture
                     };
-                    DataColumn[] dc = (from li in FormatList
-                                                 select new DataColumn(li)).ToArray();
 
-                    DataTable.Columns.AddRange(dc);
+                    FormatList.ForEach(x => DataTable.Columns.Add(x));
 
-                    int Total = 0;
+                    var Total = 0;
 
                     for (int i = 0; i < NumberOfRowsToAdd.Value; i++)
                     {
-                        object[] oa = new object[GetFormat().Length];
+                        var oa = new object[GetFormat().Length];
                         for (int x = 0; x < GetFormat().Length; x++)
                         {
                             oa[x] = GetContentArray()[Total];
@@ -166,8 +68,92 @@ namespace Template.Template
                     }
                     return true;
                 }
+
                 return false;
             }
+        }
+        public ReadOnlyMemory<byte> SheetName { get; private set; }
+
+        private string[,] Content { get; set; }
+
+        public string[,] GetContent()
+        {
+            return Content;
+        }
+
+        public string[] GetContentArray()
+        {
+            return ContentArray;
+        }
+
+        public string[] GetFormat()
+        {
+            return Format ?? null;
+        }
+
+        public int? GetFormatLength()
+        {
+            return Format != null ? Format?.Length : null;
+        }
+
+        public TemplateObject SetContent(string[,] Content)
+        {
+            if (Content.GetLength(0) != Format.Length)
+            {
+                throw new ArgumentException("Format must match length of report", nameof(Content));
+            }
+            else
+            {
+                this.Content = Content;
+            }
+            return this;
+        }
+
+        public TemplateObject SetContentArray(string[] value)
+        {
+            if (value.Length % Format.Length != 0)
+            {
+                throw new ArgumentException("Content array must be multiple of " + Format.Length + ".", nameof(ContentArray));
+            }
+            else
+            {
+                ContentArray = value;
+            }
+            return this;
+        }
+
+        public TemplateObject SetFormat(string[] Header)
+        {
+            if (Header.Count() <= 2)
+            {
+                throw new ArgumentException("Format has to be greater then 2 elements", nameof(Header));
+            }
+            else
+            {
+                Format = Header;
+                FormatList = Format.ToList();
+            }
+            return this;
+        }
+
+        public TemplateObject SetNameOfReport(ReadOnlyMemory<byte> ReportName)
+        {
+            if (!ReportName.IsEmpty && ReportName.Length >= 4)
+            {
+                NameOfReport = ReportName;
+                return this;
+            }
+            throw new ArgumentException("Value is not required length", nameof(ReportName));
+        }
+
+        public TemplateObject SetSheetName(ReadOnlyMemory<byte> SheetName)
+        {
+            if (!SheetName.IsEmpty && SheetName.Length >= 5)
+            {
+                this.SheetName = SheetName;
+                return this;
+            }
+            throw new ArgumentException("Value is not required length of 5 characters", nameof(SheetName));
         }
     }
 }

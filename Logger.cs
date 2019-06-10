@@ -1,18 +1,18 @@
 ﻿using System;
-using Template.Interfaces;
+using TemplateToExcelServer.Interfaces;
 
-namespace Template.Logger
+namespace TemplateToExcelServer.Logger
 {
     public class Logger : ILogger
     {
-        public void LogError(Exception ex, string additionalMessage)
-        {
-            Console.WriteLine("{0}: {1}", additionalMessage, ex);
-        }
 
-        public void Log(string message)
+        public virtual void Log(string message)
         {
             Console.WriteLine(message);
+        }
+        public virtual void LogError(Exception ex, string additionalMessage)
+        {
+            Console.WriteLine($"{additionalMessage}: {ex}");
         }
     }
 }

@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <StartupObject></StartupObject>
+    <LangVersion>latest</LangVersion>
+    <ApplicationIcon />
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <Prefer32Bit>true</Prefer32Bit>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <FileAlignment>1024</FileAlignment>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Workbooks\**" />
+    <EmbeddedResource Remove="Workbooks\**" />
+    <None Remove="Workbooks\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EPPlus" Version="4.5.3.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.2.0" />
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.6.0-preview3.19128.7" />
+  </ItemGroup>
+
+</Project>
