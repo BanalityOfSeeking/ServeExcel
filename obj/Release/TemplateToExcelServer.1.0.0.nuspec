@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>TemplateToExcelServer</id>
+    <version>1.0.0</version>
+    <authors>TemplateToExcelServer</authors>
+    <description>Package Description</description>
+    <dependencies>
+      <group targetFramework="net6.0-windows10.0.22000">
+        <dependency id="EPPlus" version="5.8.3" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.DependencyInjection" version="6.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Extensions.DependencyInjection.Abstractions" version="6.0.0" exclude="Build,Analyzers" />
+        <dependency id="System.Data.DataSetExtensions" version="4.5.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="C:\Users\PCYoga\source\repos\ServeExcel\bin\Release\net6.0-windows10.0.22000.0\TemplateToExcelServer.runtimeconfig.json" target="lib\net6.0-windows10.0.22000\TemplateToExcelServer.runtimeconfig.json" />
+    <file src="C:\Users\PCYoga\source\repos\ServeExcel\bin\Release\net6.0-windows10.0.22000.0\TemplateToExcelServer.dll" target="lib\net6.0-windows10.0.22000\TemplateToExcelServer.dll" />
+  </files>
+</package>
