@@ -1,0 +1,12 @@
+C:\Users\PCYoga\source\repos\ServeExcel\obj\Debug\net6.0\TemplateToExcelServer.csproj.AssemblyReference.cache
+C:\Users\PCYoga\source\repos\ServeExcel\obj\Debug\net6.0\TemplateToExcelServer.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\PCYoga\source\repos\ServeExcel\obj\Debug\net6.0\TemplateToExcelServer.AssemblyInfoInputs.cache
+C:\Users\PCYoga\source\repos\ServeExcel\obj\Debug\net6.0\TemplateToExcelServer.AssemblyInfo.cs
+C:\Users\PCYoga\source\repos\ServeExcel\obj\Debug\net6.0\TemplateToExcelServer.csproj.CoreCompileInputs.cache
+C:\Users\PCYoga\source\repos\ServeExcel\bin\Debug\net6.0\TemplateToExcelServer.deps.json
+C:\Users\PCYoga\source\repos\ServeExcel\bin\Debug\net6.0\TemplateToExcelServer.dll
+C:\Users\PCYoga\source\repos\ServeExcel\bin\Debug\net6.0\ref\TemplateToExcelServer.dll
+C:\Users\PCYoga\source\repos\ServeExcel\bin\Debug\net6.0\TemplateToExcelServer.pdb
+C:\Users\PCYoga\source\repos\ServeExcel\obj\Debug\net6.0\TemplateToExcelServer.dll
+C:\Users\PCYoga\source\repos\ServeExcel\obj\Debug\net6.0\ref\TemplateToExcelServer.dll
+C:\Users\PCYoga\source\repos\ServeExcel\obj\Debug\net6.0\TemplateToExcelServer.pdb

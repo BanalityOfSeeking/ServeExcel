@@ -85,12 +85,12 @@ namespace TemplateToExcelServer.Template
         {
             return ContentArray;
         }
-
-        public string[] GetFormat()
+#nullable enable
+        public string[]? GetFormat()
         {
             return Format ?? null;
         }
-
+#nullable disable
         public int? GetFormatLength()
         {
             return Format != null ? Format?.Length : null;

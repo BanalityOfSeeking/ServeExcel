@@ -12,9 +12,9 @@ namespace Functional
             return DataflowBlock.NullTarget<N>();
         }
 
-        public BufferBlock<T> DataBuffer = new BufferBlock<T>(new DataflowBlockOptions { EnsureOrdered = true });
+        public BufferBlock<T> DataBuffer = new(new DataflowBlockOptions { EnsureOrdered = true });
 
-        public BufferBlock<T> IOBuffer = new BufferBlock<T>(new DataflowBlockOptions { EnsureOrdered = true });
+        public BufferBlock<T> IOBuffer = new(new DataflowBlockOptions { EnsureOrdered = true });
 
         public FunctionalObject(Func<T, T>[] Operations = default, Func<T, T>[] Checks = default)
         {

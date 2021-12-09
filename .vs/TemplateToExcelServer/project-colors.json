@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "e2b2c317-ecf0-436a-a8c8-48ac5df10ea4": {
+      "ProjectGuid": "e2b2c317-ecf0-436a-a8c8-48ac5df10ea4",
+      "DisplayName": "TemplateToExcelServer",
+      "ColorIndex": 0
+    }
+  },
+  "NextColorIndex": 1
+}

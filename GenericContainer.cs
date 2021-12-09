@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using TemplateToExcelServer.Container;
 
 namespace TemplateToExcelServer.Container
 {
@@ -37,22 +35,25 @@ namespace TemplateToExcelServer.Container
                 return GetMain(MainName).FirstOrDefault(x => x.SubName.Equals(SubName)).Target;
             }
             return default;
+
         }
-        public override void Remove(P MainName, P SubName)
+        #nullable enable
+        public override void Remove(P? MainName, P? SubName)
         {
-            if (MainName != default & SubName != default & ContainerDictionary.ContainsKey(MainName))
+            if (MainName is not null && SubName is not null && ContainerDictionary.ContainsKey(MainName))
             {
                 ContainerDictionary[MainName].Remove((SubName, GetTarget(MainName, SubName)));
                 return;
             }
         }
-        public override void RemoveAll(P MainName)
+        public override void RemoveAll(P? MainName)
         {
-            if (MainName != default)
+            if (MainName is not null)
             {
                 ContainerDictionary[MainName].Clear();
                 return;
             }
         }
     }
+    #nullable disable
 }
